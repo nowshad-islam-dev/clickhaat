@@ -83,8 +83,8 @@ userSchema.set('toJSON', {
 });
 
 userSchema.methods = {
-  authenticate: async function (candidatePassword) {
-    return await bcrypt.compare(candidatePassword, this.password);
+  authenticate: function (candidatePassword) {
+    return bcrypt.compareSync(candidatePassword, this.password);
   },
 };
 
