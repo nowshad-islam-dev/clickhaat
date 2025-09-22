@@ -15,8 +15,10 @@ async function initDB() {
 initDB();
 
 // Routes
+const adminRouter = require('./routes/admin/admin.routes');
 const userRouter = require('./routes/user.routes');
+app.use('/api/auth/admin', adminRouter);
 app.use('/api/auth', userRouter);
 
 const port = process.env.PORT;
-app.listen(port, () => console.log(`Server running on port:${port} `));
+app.listen(port, () => console.log(`Server running on port:${port}`));
