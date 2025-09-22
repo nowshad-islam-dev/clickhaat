@@ -24,7 +24,7 @@ exports.signup = async (req, res) => {
     if (!savedUser)
       return res.status(500).json({ message: 'Could not save user.' });
 
-    return res.json({ message: 'User creted successfully.' });
+    return res.json({ message: 'User created successfully.' });
   } catch (err) {
     return res.status(500).json({ message: 'Internal server error.' });
   }
@@ -47,12 +47,12 @@ exports.signin = async (req, res) => {
           expiresIn: '7d',
         }
       );
-      const { firstName, lastName, fullName, email } = user;
+      const { firstName, lastName, fullName, email, id, role } = user;
       return res.status(200).json({
         token,
         user: {
-          id: user.id,
-          role: user.role,
+          id,
+          role,
           firstName,
           lastName,
           fullName,
@@ -66,4 +66,12 @@ exports.signin = async (req, res) => {
     console.log('Error:', err);
     return res.status(500).json({ message: 'Internal Server Error.' });
   }
+};
+
+exports.requireSignin = (req, res, next) => {
+  const token = req.headers.authorization.split(' ')[1];
+  const { id, role } = jwt.verify(token, process.env.JWT_SECRET);
+  const user = { id, role };
+  req.user = user;
+  next();
 };
