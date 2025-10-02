@@ -50,4 +50,5 @@ web_modules/
 .env.production.local
 .env.local
 
-
+#local multer uploads
+uploads/
