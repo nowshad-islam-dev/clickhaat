@@ -18,9 +18,11 @@ initDB();
 const adminRouter = require('./routes/admin/admin.routes');
 const userRouter = require('./routes/user.routes');
 const categoryRouter = require('./routes/category.routes');
+const productRouter = require('./routes/product.routes');
 app.use('/api/auth/admin', adminRouter);
 app.use('/api/auth', userRouter);
 app.use('/api/category', categoryRouter);
+app.use('/api/product', productRouter);
 
 const port = process.env.PORT;
 app.listen(port, () => console.log(`Server running on port:${port}`));
