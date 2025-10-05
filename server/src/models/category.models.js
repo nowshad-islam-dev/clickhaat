@@ -8,6 +8,11 @@ const categorySchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Category',
     },
+    image: {
+      url: { type: String, required: true },
+      alt: { type: String, trim: true, maxLength: 20 },
+      isPrimary: { type: Boolean, default: true },
+    },
   },
   { timestamps: true }
 );
