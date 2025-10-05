@@ -19,5 +19,14 @@ exports.isAdmin = (req, res, next) => {
   if (req.user?.role === 'admin') {
     return next();
   }
-  return res.status(403).json({ message: 'Access denied.' });
+  return res
+    .status(403)
+    .json({ message: 'Access denied. Admin privileges required.' });
+};
+
+exports.isUser = (req, res, next) => {
+  if (req.user?.role === 'user') {
+    return next();
+  }
+  return res.status(403).json({ message: 'Access denied. Not a valid user.' });
 };
