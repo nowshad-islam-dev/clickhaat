@@ -28,13 +28,18 @@ exports.createCategory = async (req, res) => {
   try {
     const { name, parentId } = req.body;
 
+    let categoryImg = {};
+    if (req.file) {
+      categoryImg.url = `/uploads/${req.file.filename || ''}`;
+    }
+
     const slug = slugify(name, { lower: true });
     const existing = await Category.findOne({ slug });
     if (existing) {
       return res.status(400).json({ message: 'Category already exists.' });
     }
 
-    const newCategoryObj = { name, slug };
+    const newCategoryObj = { name, slug, image: categoryImg };
 
     if (parentId) {
       if (!mongoose.Types.ObjectId.isValid(parentId)) {
