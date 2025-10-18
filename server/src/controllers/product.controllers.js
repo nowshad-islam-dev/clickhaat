@@ -24,9 +24,15 @@ exports.createProduct = async (req, res) => {
     });
 
     await product.save();
-    return res.status(201).json({ message: 'Prouct created succesfully.' });
+    return res.status(201).json({ message: 'Product created succesfully.' });
   } catch (err) {
-    console.log('Err', err);
-    return res.status(500).json({ message: 'Internal server error.' });
+    // Duplicate key (slug or name)
+    if (err.code === 11000) {
+      return res
+        .status(400)
+        .json({ error: 'Product with this name or slug already exists.' });
+    }
+    console.log('Error-->(product):', err);
+    return res.status(500).json({ error: 'Failed to create product.' });
   }
 };
