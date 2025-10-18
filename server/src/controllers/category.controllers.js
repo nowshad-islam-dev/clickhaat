@@ -30,25 +30,25 @@ exports.createCategory = async (req, res) => {
 
     let categoryImg = {};
     if (req.file) {
-      categoryImg.url = `/uploads/${req.file.filename || ''}`;
+      categoryImg.url = `/uploads/${req.file.filename}`;
     }
 
     const slug = slugify(name, { lower: true });
     const existing = await Category.findOne({ slug });
     if (existing) {
-      return res.status(400).json({ message: 'Category already exists.' });
+      return res.status(400).json({ error: 'Category already exists.' });
     }
 
     const newCategoryObj = { name, slug, image: categoryImg };
 
     if (parentId) {
       if (!mongoose.Types.ObjectId.isValid(parentId)) {
-        return res.status(404).json({ message: 'Invalid parentId format.' });
+        return res.status(404).json({ error: 'Invalid parentId format.' });
       }
 
       const isParentValid = await Category.findById(parentId);
       if (!isParentValid) {
-        return res.status(404).json({ message: 'Parent category not found.' });
+        return res.status(404).json({ error: 'Parent category not found.' });
       }
       newCategoryObj.parentId = parentId;
     }
@@ -57,7 +57,8 @@ exports.createCategory = async (req, res) => {
 
     return res.status(201).json(newCategory);
   } catch (err) {
-    return res.status(500).json({ message: 'Internal server error.' });
+    console.log('Error-->(category):', err);
+    return res.status(500).json({ error: 'Failed to create category.' });
   }
 };
 
@@ -66,13 +67,13 @@ exports.getCategories = async (req, res) => {
     const categories = await Category.find({});
 
     if (!categories)
-      return res.status(404).json({ message: 'Categories not found.' });
+      return res.status(404).json({ error: 'Categories not found.' });
 
     const categoryList = buildCategoryTree(categories);
 
     return res.status(200).json({ categoryList });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: 'Internal server error.' });
+    console.log('Error-->(category):', err);
+    return res.status(500).json({ error: 'Failed to fetch all categories.' });
   }
 };
