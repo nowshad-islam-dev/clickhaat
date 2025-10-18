@@ -8,7 +8,7 @@ exports.signup = async (req, res) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists.' });
+      return res.status(400).json({ error: 'User already exists.' });
     }
 
     const newUsername = await generateUsername(firstName, lastName);
@@ -20,13 +20,12 @@ exports.signup = async (req, res) => {
       username: newUsername,
     });
 
-    const savedUser = await newUser.save();
-    if (!savedUser)
-      return res.status(500).json({ message: 'Could not save user.' });
+    await newUser.save();
 
-    return res.json({ message: 'User created successfully.' });
+    return res.status(201).json({ message: 'User created successfully.' });
   } catch (err) {
-    return res.status(500).json({ message: 'Internal server error.' });
+    console.log('Error-->(user):', err);
+    return res.status(500).json({ error: 'Failed to sign up.' });
   }
 };
 
@@ -36,7 +35,7 @@ exports.signin = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: 'Invalid email.' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     if (user.authenticate(password)) {
@@ -60,10 +59,10 @@ exports.signin = async (req, res) => {
         },
       });
     } else {
-      return res.status(401).json({ message: 'Invalid Password.' });
+      return res.status(401).json({ error: 'Invalid email or password.' });
     }
   } catch (err) {
-    console.log('Error:', err);
-    return res.status(500).json({ message: 'Internal Server Error.' });
+    console.log('Error-->(user):', err);
+    return res.status(500).json({ error: 'Failed to sign in.' });
   }
 };

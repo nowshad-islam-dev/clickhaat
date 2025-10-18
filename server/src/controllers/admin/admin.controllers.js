@@ -8,7 +8,7 @@ exports.signup = async (req, res) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'Admin already exists.' });
+      return res.status(400).json({ error: 'Admin already exists.' });
     }
 
     const newUsername = await generateUsername(firstName, lastName);
@@ -21,13 +21,12 @@ exports.signup = async (req, res) => {
       role: 'admin',
     });
 
-    const savedUser = await newUser.save();
-    if (!savedUser)
-      return res.status(500).json({ message: 'Could not save admin.' });
+    await newUser.save();
 
-    return res.json({ message: 'Admin created successfully.' });
+    return res.status(201).json({ message: 'Admin created successfully.' });
   } catch (err) {
-    return res.status(500).json({ message: 'Internal server error.' });
+    console.log('Error-->(admin):', err);
+    return res.status(500).json({ error: 'Failed to sign up as admin.' });
   }
 };
 
@@ -37,7 +36,7 @@ exports.signin = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: 'Invalid email.' });
+      return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
     if (user.authenticate(password) && user.role === 'admin') {
@@ -61,10 +60,10 @@ exports.signin = async (req, res) => {
         },
       });
     } else {
-      return res.status(401).json({ message: 'Invalid Password.' });
+      return res.status(401).json({ error: 'Invalid email or password.' });
     }
   } catch (err) {
-    console.log('Error:', err);
-    return res.status(500).json({ message: 'Internal Server Error.' });
+    console.log('Error-->(admin):', err);
+    return res.status(500).json({ error: 'Failed to sign in as admin.' });
   }
 };

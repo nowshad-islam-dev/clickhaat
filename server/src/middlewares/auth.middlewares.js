@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 exports.requireSignin = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) {
-    return res.status(401).json({ message: 'Authorization required.' });
+    return res.status(401).json({ error: 'Authorization required.' });
   }
 
   try {
@@ -11,7 +11,7 @@ exports.requireSignin = (req, res, next) => {
     req.user = { id, role };
     next();
   } catch (err) {
-    return res.status(401).json({ message: 'Invalid or expired token.' });
+    return res.status(401).json({ error: 'Invalid or expired token.' });
   }
 };
 
@@ -21,12 +21,12 @@ exports.isAdmin = (req, res, next) => {
   }
   return res
     .status(403)
-    .json({ message: 'Access denied. Admin privileges required.' });
+    .json({ error: 'Access denied. Admin privileges required.' });
 };
 
 exports.isUser = (req, res, next) => {
   if (req.user?.role === 'user') {
     return next();
   }
-  return res.status(403).json({ message: 'Access denied. Not a valid user.' });
+  return res.status(403).json({ error: 'Access denied. Not a valid user.' });
 };

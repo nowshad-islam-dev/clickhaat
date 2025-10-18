@@ -6,16 +6,16 @@ exports.validateSignupRequest = [
     .escape()
     .notEmpty()
     .withMessage('First Name is required.')
-    .isLength({ max: 20 })
-    .withMessage('First Name must be less than 20 characters.'),
+    .isLength({ min: 3, max: 20 })
+    .withMessage('First Name must be between 3 and 20 characters.'),
 
   body('lastName')
     .trim()
     .escape()
     .notEmpty()
     .withMessage('Last Name is required.')
-    .isLength({ max: 20 })
-    .withMessage('Last Name must be less than 20 characters.'),
+    .isLength({ min: 3, max: 20 })
+    .withMessage('Last Name must be between 3 and 20 characters.'),
 
   body('email')
     .trim()
@@ -47,7 +47,7 @@ exports.validateSiginRequest = [
 exports.isRequestValidated = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ message: errors.array()[0].msg });
+    return res.status(400).json({ error: errors.array()[0].msg });
   }
   next();
 };
