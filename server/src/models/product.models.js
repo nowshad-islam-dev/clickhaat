@@ -16,7 +16,7 @@ const productSchema = new mongoose.Schema(
       unique: true,
       index: true,
     },
-    price: { type: Number, required: true, default: 0 },
+    price: { type: Number, default: 0 },
     description: {
       type: String,
       trim: true,
@@ -28,7 +28,7 @@ const productSchema = new mongoose.Schema(
     offer: { type: Number, min: 0, max: 100, default: 0 },
     picture: [
       {
-        url: { type: String, required: true },
+        url: { type: String, default: '' },
         alt: { type: String, trim: true, maxLength: 20 },
         isPrimary: { type: Boolean, default: false },
       },
@@ -50,7 +50,7 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true, versionKey: false }
 );
 
 productSchema.index({ price: 1 });
