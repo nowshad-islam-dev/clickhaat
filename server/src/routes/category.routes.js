@@ -5,6 +5,10 @@ const {
 } = require('../controllers/category.controllers');
 const { requireSignin, isAdmin } = require('../middlewares/auth.middlewares');
 const { uploadSingle } = require('../middlewares/multer.middlewares');
+const {
+  validateCategoryCreationRequest,
+} = require('../validators/category.validators');
+const { isRequestValidated } = require('../validators/auth.validators');
 
 const router = express.Router();
 
@@ -13,6 +17,8 @@ router.post(
   requireSignin,
   isAdmin,
   uploadSingle('image'),
+  validateCategoryCreationRequest,
+  isRequestValidated,
   createCategory
 );
 router.get('/all', getCategories);
