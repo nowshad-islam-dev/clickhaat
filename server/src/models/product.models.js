@@ -56,6 +56,4 @@ const productSchema = new mongoose.Schema(
 productSchema.index({ price: 1 });
 productSchema.index({ category: 1 });
 
-productSchema.set('toJSON', { virtuals: true });
-
 module.exports = mongoose.model('Product', productSchema);

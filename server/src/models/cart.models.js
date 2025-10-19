@@ -19,6 +19,4 @@ const cartSchema = new mongoose.Schema(
   { timestamps: true, versionKey: false }
 );
 
-cartSchema.set('toJSON', { virtuals: false });
-
 module.exports = mongoose.model('Cart', cartSchema);
