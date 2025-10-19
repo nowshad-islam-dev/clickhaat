@@ -10,7 +10,7 @@ exports.validateCategoryCreationRequest = [
     .withMessage('Category name must be between 3 and 30 characters.'),
 
   body('parentId')
-    .notEmpty()
+    .optional()
     .isMongoId()
     .withMessage('Category must be a valid ObjectId'),
 

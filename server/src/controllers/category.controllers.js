@@ -66,9 +66,6 @@ exports.getCategories = async (req, res) => {
   try {
     const categories = await Category.find({});
 
-    if (!categories)
-      return res.status(404).json({ error: 'Categories not found.' });
-
     const categoryList = buildCategoryTree(categories);
 
     return res.status(200).json({ categoryList });
