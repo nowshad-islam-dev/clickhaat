@@ -1,6 +1,9 @@
 const express = require('express');
 
-const { createProduct } = require('../controllers/product.controllers');
+const {
+  createProduct,
+  getProducts,
+} = require('../controllers/product.controllers');
 const { requireSignin, isAdmin } = require('../middlewares/auth.middlewares');
 const { uploadArray } = require('../middlewares/multer.middlewares');
 const { isRequestValidated } = require('../validators/auth.validators');
@@ -19,5 +22,7 @@ router.post(
   isRequestValidated,
   createProduct
 );
+
+router.get('/all', getProducts);
 
 module.exports = router;

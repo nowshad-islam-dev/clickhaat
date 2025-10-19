@@ -36,3 +36,50 @@ exports.createProduct = async (req, res) => {
     return res.status(500).json({ error: 'Failed to create product.' });
   }
 };
+
+exports.getProducts = async (req, res) => {
+  try {
+    // Query params
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 1;
+    const search = req.query.search || '';
+    const category = req.query.category || '';
+
+    const filter = {};
+
+    if (search) {
+      filter.name = { $regex: search, $options: 'i' };
+    }
+    if (category) {
+      filter.category = category;
+    }
+
+    // Total number of products after applying filter
+    const total = await Product.countDocuments(filter);
+
+    const products = await Product.find(filter, {
+      name: 1,
+      price: 1,
+      description: 1,
+      quantity: 1,
+      offer: 1,
+      category: 1,
+      _id: 1,
+    })
+      .populate('category', 'name')
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      total,
+      limit,
+      page,
+      totalPages: Math.ceil(total / limit),
+      products,
+    });
+  } catch (err) {
+    console.log('Error-->(product):', err);
+    return res.status(500).json({ error: 'Failed to fetch all products.' });
+  }
+};
