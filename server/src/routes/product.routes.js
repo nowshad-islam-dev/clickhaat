@@ -17,7 +17,7 @@ router.post(
   '/create',
   requireSignin,
   isAdmin,
-  uploadArray('picture'),
+  uploadArray('picture', 'products'),
   validateProductCreationRequest,
   isRequestValidated,
   createProduct

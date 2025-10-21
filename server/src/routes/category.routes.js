@@ -16,7 +16,7 @@ router.post(
   '/create',
   requireSignin,
   isAdmin,
-  uploadSingle('image'),
+  uploadSingle('image', 'categories'),
   validateCategoryCreationRequest,
   isRequestValidated,
   createCategory

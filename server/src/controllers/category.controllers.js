@@ -29,8 +29,8 @@ exports.createCategory = async (req, res) => {
     const { name, parentId } = req.body;
 
     let categoryImg = {};
-    if (req.file) {
-      categoryImg.url = `/uploads/${req.file.filename}`;
+    if (req.fileUrl) {
+      categoryImg.url = req.fileUrl;
     }
 
     const slug = slugify(name, { lower: true });

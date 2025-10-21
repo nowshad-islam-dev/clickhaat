@@ -6,9 +6,9 @@ exports.createProduct = async (req, res) => {
     const { name, price, description, category, quantity } = req.body;
 
     let picture = [];
-    if (req.files.length > 0) {
-      picture = req.files.map((file) => ({
-        url: `/uploads/${file.filename}`,
+    if (req.fileUrls.length > 0) {
+      picture = req.fileUrls.map((url) => ({
+        url,
       }));
     }
 
@@ -61,6 +61,7 @@ exports.getProducts = async (req, res) => {
       name: 1,
       price: 1,
       description: 1,
+      picture: 1,
       quantity: 1,
       offer: 1,
       category: 1,
