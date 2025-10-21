@@ -4,13 +4,14 @@ dotenv.config();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const compression = require('compression');
 
 const app = express();
 
-const whitelist = ['http://localhost:4000'];
+const whitelist = ['http://localhost:4000', 'http://localhost:3000'];
 const corsOptions = {
   origin: function (origin, callback) {
-    if (whitelist.indexOf(origin) !== -1) {
+    if (!origin || whitelist.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -18,7 +19,8 @@ const corsOptions = {
   },
 };
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '100mb' }));
+app.use(compression());
 
 async function initDB() {
   await mongoose.connect(process.env.MONGO_URI);
