@@ -1,4 +1,4 @@
-const { body } = require('express-validator');
+const { body, param } = require('express-validator');
 
 exports.validateProductCreationRequest = [
   body('name')
@@ -76,4 +76,62 @@ exports.validateProductCreationRequest = [
     .withMessage('Category must be provided.')
     .isMongoId()
     .withMessage('Category must be a valid ObjectId'),
+];
+
+exports.validateProductUpdateRequest = [
+  param('productId')
+    .notEmpty()
+    .withMessage('Product Id is missing in params.')
+    .isMongoId()
+    .withMessage('Product Id must be a valid ObjectId'),
+
+  body('name')
+    .optional()
+    .trim()
+    .escape()
+    .notEmpty()
+    .withMessage('Product name is required.')
+    .isLength({ min: 6, max: 500 })
+    .withMessage('Product name must be between 6 and 500 characters.'),
+
+  body('price')
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage('Price must be a non-negative number'),
+
+  body('description')
+    .optional()
+    .trim()
+    .escape()
+    .notEmpty()
+    .withMessage('Product description is required.')
+    .isLength({ min: 20, max: 3000 })
+    .withMessage(
+      'Product descriptionn must be between 20 and 3000 characters.'
+    ),
+
+  body('quantity')
+    .optional()
+    .escape()
+    .isInt({ min: 0 })
+    .withMessage('Quantity must be a valid number.'),
+
+  body('offer')
+    .optional()
+    .escape()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Offer must be between 0 and 100.'),
+
+  body('category')
+    .optional()
+    .isMongoId()
+    .withMessage('Category must be a valid ObjectId'),
+];
+
+exports.validateProductDeleteRequest = [
+  param('productId')
+    .notEmpty()
+    .withMessage('Product Id is missing in params.')
+    .isMongoId()
+    .withMessage('Product Id must be a valid ObjectId'),
 ];
