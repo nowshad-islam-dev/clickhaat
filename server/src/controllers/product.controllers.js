@@ -7,7 +7,7 @@ exports.createProduct = async (req, res) => {
     const { name, price, description, category, quantity, offer } = req.body;
 
     let picture = [];
-    if (req.fileUrls.length > 0) {
+    if (req.fileUrls?.length > 0) {
       picture = req.fileUrls.map((url) => ({
         url,
       }));
@@ -25,8 +25,15 @@ exports.createProduct = async (req, res) => {
       offer,
     });
 
-    await product.save();
-    return res.status(201).json({ message: 'Product created succesfully.' });
+    let createdProduct = await product.save();
+
+    createdProduct = await Product.findById(createdProduct._id)
+      .select('name price description picture quantity offer category')
+      .populate('category', 'name');
+
+    return res
+      .status(201)
+      .json({ message: 'Product created succesfully.', data: createdProduct });
   } catch (err) {
     // Duplicate key (slug or name)
     if (err.code === 11000) {
@@ -84,11 +91,15 @@ exports.updateProduct = async (req, res) => {
     if (quantity) updateFields.quantity = quantity;
     if (offer) updateFields.offer = offer;
 
-    const updatedProduct = await Product.findByIdAndUpdate(
+    let updatedProduct = await Product.findByIdAndUpdate(
       productId,
       { $set: updateFields },
       { new: true, runValidators: true }
     );
+
+    updatedProduct = await Product.findById(updatedProduct._id)
+      .select('name price description picture quantity offer category')
+      .populate('category', 'name');
 
     return res
       .status(200)
@@ -143,7 +154,6 @@ exports.getProducts = async (req, res) => {
       quantity: 1,
       offer: 1,
       category: 1,
-      _id: 1,
     })
       .populate('category', 'name')
       .skip((page - 1) * limit)
