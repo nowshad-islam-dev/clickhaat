@@ -95,9 +95,7 @@ exports.updateProduct = async (req, res) => {
       productId,
       { $set: updateFields },
       { new: true, runValidators: true }
-    );
-
-    updatedProduct = await Product.findById(updatedProduct._id)
+    )
       .select('name price description picture quantity offer category')
       .populate('category', 'name');
 
