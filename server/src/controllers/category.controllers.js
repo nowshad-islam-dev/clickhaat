@@ -116,6 +116,9 @@ exports.updateCategory = async (req, res) => {
 };
 
 exports.deleteCategory = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { categoryId } = req.params;
 
@@ -124,9 +127,35 @@ exports.deleteCategory = async (req, res) => {
       return res.status(404).json({ error: 'Category not found.' });
     }
 
-    await Category.findByIdAndDelete(categoryId);
-    return res.status(200).json({ message: 'Category deleted successfully.' });
+    const defaultCategory = await Category.findOne({ name: 'uncategorized' });
+    if (!defaultCategory) {
+      throw new Error('Default "uncategorized" category not found.');
+    }
+
+    await Category.updateMany(
+      { parentId: categoryId },
+      { $unset: { parentId: 1 } },
+      { session }
+    );
+
+    await Product.updateMany(
+      { category: categoryId },
+      { $set: { category: defaultCategory._id } },
+      { session }
+    );
+
+    await Category.findByIdAndDelete(categoryId, { session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(200).json({
+      message: 'Category deleted successfully.',
+    });
   } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+
     console.log('Error-->(category):', err);
     return res.status(500).json({ error: 'Failed to delete category.' });
   }
