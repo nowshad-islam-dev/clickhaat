@@ -30,6 +30,7 @@ router.put(
   '/update/:categoryId',
   requireSignin,
   isAdmin,
+  uploadSingle('image', 'categories'),
   validateCategoryUpdateRequest,
   isRequestValidated,
   updateCategory

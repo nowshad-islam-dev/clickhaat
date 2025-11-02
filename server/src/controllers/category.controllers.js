@@ -7,15 +7,16 @@ function buildCategoryTree(categories) {
   // Group categories by parentId
   const map = {};
   categories.forEach((cat) => {
-    const parentId = cat.parentId ? String(cat.parentId) : null;
-    if (!map[parentId]) map[parentId] = [];
-    map[parentId].push(cat);
+    const parent = cat.parentId ? String(cat.parentId) : null;
+    if (!map[parent]) map[parent] = [];
+    map[parent].push(cat);
   });
 
   // Recursive builder
-  function buildTree(parentId = null) {
-    return (map[parentId] || []).map((cat) => ({
-      id: cat._id,
+  function buildTree(parent = null) {
+    return (map[parent] || []).map((cat) => ({
+      _id: cat._id,
+      image: cat.image,
       name: cat.name,
       slug: cat.slug,
       children: buildTree(String(cat._id)),
@@ -70,6 +71,11 @@ exports.updateCategory = async (req, res) => {
     const { categoryId } = req.params;
     const { name, parentId } = req.body;
 
+    let categoryImg = {};
+    if (req.fileUrl) {
+      categoryImg.url = req.fileUrl;
+    }
+
     const existing = await Category.exists({ _id: categoryId });
     if (!existing) {
       return res.status(404).json({ error: 'Category not found.' });
@@ -82,9 +88,9 @@ exports.updateCategory = async (req, res) => {
       }
     }
 
-    const hasUpdatableField = [name, parentId].some(
-      (field) => field !== '' && field != undefined
-    );
+    const hasUpdatableField =
+      [name, parentId].some((field) => field !== '' && field != undefined) ||
+      categoryImg.url?.length > 0;
 
     if (!hasUpdatableField) {
       return res
@@ -92,14 +98,13 @@ exports.updateCategory = async (req, res) => {
         .json({ error: 'Provide at least one field to update.' });
     }
 
-    const slug = slugify(name, { lower: true });
-
     const updateFields = {};
     if (name) {
       updateFields.name = name;
-      updateFields.slug = slug;
+      updateFields.slug = slugify(name, { lower: true });
     }
     if (parentId) updateFields.parentId = parentId;
+    if (categoryImg) updateFields.image = categoryImg;
 
     const updateCategory = await Category.findByIdAndUpdate(
       categoryId,
