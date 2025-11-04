@@ -2,6 +2,7 @@ const slugify = require('slugify');
 const mongoose = require('mongoose');
 const Category = require('../models/category.models');
 const Product = require('../models/product.models');
+const AppError = require('../utils/AppError');
 
 function buildCategoryTree(categories) {
   // Group categories by parentId
@@ -27,156 +28,135 @@ function buildCategoryTree(categories) {
 }
 
 exports.createCategory = async (req, res) => {
-  try {
-    const { name, parentId } = req.body;
+  const { name, parentId } = req.body;
 
-    let categoryImg = {};
-    if (req.fileUrl) {
-      categoryImg.url = req.fileUrl;
-    }
-
-    const slug = slugify(name, { lower: true });
-    const existing = await Category.findOne({ slug });
-    if (existing) {
-      return res.status(400).json({ error: 'Category already exists.' });
-    }
-
-    const newCategoryObj = { name, slug, image: categoryImg };
-
-    if (parentId) {
-      if (!mongoose.Types.ObjectId.isValid(parentId)) {
-        return res.status(404).json({ error: 'Invalid parentId format.' });
-      }
-
-      const isParentValid = await Category.findById(parentId);
-      if (!isParentValid) {
-        return res.status(404).json({ error: 'Parent category not found.' });
-      }
-      newCategoryObj.parentId = parentId;
-    }
-
-    const newCategory = await Category.create(newCategoryObj);
-
-    return res
-      .status(201)
-      .json({ message: 'Category created successfully.', data: newCategory });
-  } catch (err) {
-    console.log('Error-->(category):', err);
-    return res.status(500).json({ error: 'Failed to create category.' });
+  let categoryImg = {};
+  if (req.fileUrl) {
+    categoryImg.url = req.fileUrl;
   }
+
+  const slug = slugify(name, { lower: true });
+  const existing = await Category.exists({ slug });
+  if (existing) throw new AppError('Category already exists.', 400);
+
+  const newCategoryObj = { name, slug, image: categoryImg };
+
+  if (parentId) {
+    const isParentValid = await Category.exists(parentId);
+    if (!isParentValid) {
+      throw new AppError('Parent category not found.', 404);
+    }
+    newCategoryObj.parentId = parentId;
+  }
+
+  const newCategory = await Category.create(newCategoryObj);
+
+  return res.status(201).json({
+    stauts: 'success',
+    message: 'Category created successfully.',
+    data: newCategory,
+  });
 };
 
 exports.updateCategory = async (req, res) => {
-  try {
-    const { categoryId } = req.params;
-    const { name, parentId } = req.body;
+  const { categoryId } = req.params;
+  const { name, parentId } = req.body;
 
-    let categoryImg = {};
-    if (req.fileUrl) {
-      categoryImg.url = req.fileUrl;
-    }
-
-    const existing = await Category.exists({ _id: categoryId });
-    if (!existing) {
-      return res.status(404).json({ error: 'Category not found.' });
-    }
-
-    if (parentId) {
-      const isParentValid = await Category.exists({ _id: parentId });
-      if (!isParentValid) {
-        return res.status(404).json({ error: 'Parent category not found.' });
-      }
-    }
-
-    const hasUpdatableField =
-      [name, parentId].some((field) => field !== '' && field != undefined) ||
-      categoryImg.url?.length > 0;
-
-    if (!hasUpdatableField) {
-      return res
-        .status(400)
-        .json({ error: 'Provide at least one field to update.' });
-    }
-
-    const updateFields = {};
-    if (name) {
-      updateFields.name = name;
-      updateFields.slug = slugify(name, { lower: true });
-    }
-    if (parentId) updateFields.parentId = parentId;
-    if (categoryImg) updateFields.image = categoryImg;
-
-    const updateCategory = await Category.findByIdAndUpdate(
-      categoryId,
-      { $set: updateFields },
-      { new: true, runValidators: true }
-    );
-
-    return res.status(200).json({
-      message: 'Category updated successfully.',
-      data: updateCategory,
-    });
-  } catch (err) {
-    console.log('Error-->(category):', err);
-    return res.status(500).json({ error: 'Failed to update category.' });
+  let categoryImg = {};
+  if (req.fileUrl) {
+    categoryImg.url = req.fileUrl;
   }
+
+  const existing = await Category.exists({ _id: categoryId });
+  if (!existing) {
+    throw new AppError('Category not found.', 404);
+  }
+
+  if (parentId) {
+    const isParentValid = await Category.exists({ _id: parentId });
+    if (!isParentValid) {
+      throw new AppError('Parent category not found.', 404);
+    }
+  }
+
+  const hasUpdatableField =
+    [name, parentId].some((field) => field !== '' && field != undefined) ||
+    categoryImg.url?.length > 0;
+
+  if (!hasUpdatableField) {
+    throw new AppError('Provide at least one field to update.', 400);
+  }
+
+  const updateFields = {};
+  if (name) {
+    updateFields.name = name;
+    updateFields.slug = slugify(name, { lower: true });
+  }
+  if (parentId) updateFields.parentId = parentId;
+  if (categoryImg) updateFields.image = categoryImg;
+
+  const updateCategory = await Category.findByIdAndUpdate(
+    categoryId,
+    { $set: updateFields },
+    { new: true, runValidators: true }
+  );
+
+  return res.status(200).json({
+    status: 'success',
+    message: 'Category updated successfully.',
+    data: updateCategory,
+  });
 };
 
 exports.deleteCategory = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
-  try {
-    const { categoryId } = req.params;
+  const { categoryId } = req.params;
 
-    const existing = await Category.exists({ _id: categoryId });
-    if (!existing) {
-      return res.status(404).json({ error: 'Category not found.' });
-    }
-
-    const defaultCategory = await Category.findOne({ name: 'uncategorized' });
-    if (!defaultCategory) {
-      throw new Error('Default "uncategorized" category not found.');
-    }
-
-    await Category.updateMany(
-      { parentId: categoryId },
-      { $unset: { parentId: 1 } },
-      { session }
-    );
-
-    await Product.updateMany(
-      { category: categoryId },
-      { $set: { category: defaultCategory._id } },
-      { session }
-    );
-
-    await Category.findByIdAndDelete(categoryId, { session });
-
-    await session.commitTransaction();
-    session.endSession();
-
-    return res.status(200).json({
-      message: 'Category deleted successfully.',
-    });
-  } catch (err) {
-    await session.abortTransaction();
-    session.endSession();
-
-    console.log('Error-->(category):', err);
-    return res.status(500).json({ error: 'Failed to delete category.' });
+  const existing = await Category.exists({ _id: categoryId });
+  if (!existing) {
+    throw new AppError('Category not found.', 404);
   }
+
+  const defaultCategory = await Category.findOne({ name: 'uncategorized' });
+  if (!defaultCategory) {
+    throw new AppError('Default "uncategorized" category not found.', 500);
+  }
+  if (defaultCategory._id == categoryId) {
+    throw new AppError('You cannot delete default category.', 400);
+  }
+
+  await Category.updateMany(
+    { parentId: categoryId },
+    { $unset: { parentId: 1 } },
+    { session }
+  );
+
+  await Product.updateMany(
+    { category: categoryId },
+    { $set: { category: defaultCategory._id } },
+    { session }
+  );
+
+  await Category.findByIdAndDelete(categoryId, { session });
+
+  await session.commitTransaction();
+  session.endSession();
+
+  return res.status(200).json({
+    status: 'success',
+    message: 'Category deleted successfully.',
+  });
 };
 
 exports.getCategories = async (req, res) => {
-  try {
-    const categories = await Category.find({});
+  const categories = await Category.find({});
 
-    const categoryList = buildCategoryTree(categories);
+  const categoryList = buildCategoryTree(categories);
 
-    return res.status(200).json({ categoryList });
-  } catch (err) {
-    console.log('Error-->(category):', err);
-    return res.status(500).json({ error: 'Failed to fetch all categories.' });
-  }
+  return res.status(200).json({
+    status: 'success',
+    data: categoryList,
+  });
 };
