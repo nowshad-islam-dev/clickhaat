@@ -42,7 +42,7 @@ exports.createCategory = async (req, res) => {
   const newCategoryObj = { name, slug, image: categoryImg };
 
   if (parentId) {
-    const isParentValid = await Category.exists(parentId);
+    const isParentValid = await Category.exists({_id: parentId});
     if (!isParentValid) {
       throw new AppError('Parent category not found.', 404);
     }
